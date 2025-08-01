@@ -176,6 +176,11 @@ const Accounts: React.FC = () => {
                             Bill Date: {account.bill_generation_date}th of month
                           </Typography>
                         )}
+                        {account.last_payment_date && (
+                          <Typography variant="caption" display="block">
+                            Last Payment: {account.last_payment_date}th of month
+                          </Typography>
+                        )}
                       </Box>
                     )}
                   </Box>
@@ -319,11 +324,12 @@ const Accounts: React.FC = () => {
                   render={({ field }) => (
                     <TextField
                       {...field}
-                      label="Last Payment Date"
-                      type="date"
+                      label="Last Payment Date (Day of Month)"
+                      type="number"
                       fullWidth
                       margin="normal"
-                      InputLabelProps={{ shrink: true }}
+                      inputProps={{ min: 1, max: 31 }}
+                      helperText="Enter day of month (1-31)"
                     />
                   )}
                 />

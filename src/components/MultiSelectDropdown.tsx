@@ -143,7 +143,7 @@ const MultiSelectDropdown: React.FC<MultiSelectDropdownProps> = ({
             <Chip
               size="small"
               label="Clear All"
-              onClick={() => onChange([], { action: 'clear' })}
+              onClick={() => onChange([], { action: 'clear', removedValues: Array.isArray(value) ? value : [] } as any)}
               variant="outlined"
               icon={<Clear />}
               sx={{ borderColor: '#d32f2f', color: '#d32f2f' }}

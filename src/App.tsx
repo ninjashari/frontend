@@ -2,8 +2,11 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { CircularProgress, Box } from '@mui/material';
 import CssBaseline from '@mui/material/CssBaseline';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Layout from './components/Layout';
+import AuthPage from './pages/AuthPage';
 import Dashboard from './pages/Dashboard';
 import Accounts from './pages/Accounts';
 import Transactions from './pages/Transactions';
@@ -31,22 +34,49 @@ const theme = createTheme({
   },
 });
 
+const AppContent: React.FC = () => {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        minHeight="100vh"
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (!user) {
+    return <AuthPage />;
+  }
+
+  return (
+    <Layout>
+      <Routes>
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/accounts" element={<Accounts />} />
+        <Route path="/transactions" element={<Transactions />} />
+        <Route path="/payees" element={<Payees />} />
+        <Route path="/categories" element={<Categories />} />
+        <Route path="/reports" element={<Reports />} />
+      </Routes>
+    </Layout>
+  );
+};
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <Router>
-          <Layout>
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/accounts" element={<Accounts />} />
-              <Route path="/transactions" element={<Transactions />} />
-              <Route path="/payees" element={<Payees />} />
-              <Route path="/categories" element={<Categories />} />
-              <Route path="/reports" element={<Reports />} />
-            </Routes>
-          </Layout>
+          <AuthProvider>
+            <AppContent />
+          </AuthProvider>
         </Router>
       </ThemeProvider>
     </QueryClientProvider>

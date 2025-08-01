@@ -10,7 +10,9 @@ import {
   ListItemText,
   Toolbar,
   Typography,
-  useTheme,
+  IconButton,
+  Menu,
+  MenuItem,
 } from '@mui/material';
 import {
   Dashboard,
@@ -19,8 +21,11 @@ import {
   Person,
   Category,
   Assessment,
+  AccountCircle,
+  Logout,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 const drawerWidth = 240;
 
@@ -38,9 +43,23 @@ const menuItems = [
 ];
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const theme = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, logout } = useAuth();
+  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+
+  const handleUserMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleUserMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleLogout = () => {
+    logout();
+    handleUserMenuClose();
+  };
 
   return (
     <Box sx={{ display: 'flex' }}>
@@ -52,9 +71,48 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         }}
       >
         <Toolbar>
-          <Typography variant="h6" noWrap component="div">
+          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
             Expense Manager
           </Typography>
+          
+          <Box display="flex" alignItems="center" gap={2}>
+            <Typography variant="body2">
+              Welcome, {user?.name}
+            </Typography>
+            <IconButton
+              size="large"
+              edge="end"
+              aria-label="account of current user"
+              aria-controls="user-menu"
+              aria-haspopup="true"
+              onClick={handleUserMenuOpen}
+              color="inherit"
+            >
+              <AccountCircle />
+            </IconButton>
+            <Menu
+              id="user-menu"
+              anchorEl={anchorEl}
+              anchorOrigin={{
+                vertical: 'top',
+                horizontal: 'right',
+              }}
+              keepMounted
+              transformOrigin={{
+                vertical: 'top',
+                horizontal: 'right',
+              }}
+              open={Boolean(anchorEl)}
+              onClose={handleUserMenuClose}
+            >
+              <MenuItem onClick={handleLogout}>
+                <ListItemIcon>
+                  <Logout fontSize="small" />
+                </ListItemIcon>
+                Logout
+              </MenuItem>
+            </Menu>
+          </Box>
         </Toolbar>
       </AppBar>
       

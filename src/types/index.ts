@@ -6,7 +6,7 @@ export interface Account {
   opening_date: string;
   credit_limit?: number;
   bill_generation_date?: number;
-  last_payment_date?: string;
+  last_payment_date?: number;
   created_at: string;
   updated_at?: string;
 }
@@ -51,7 +51,7 @@ export interface CreateAccountDto {
   opening_date: string;
   credit_limit?: number;
   bill_generation_date?: number;
-  last_payment_date?: string;
+  last_payment_date?: number;
 }
 
 export interface CreatePayeeDto {

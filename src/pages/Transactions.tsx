@@ -24,7 +24,7 @@ import { Add, Edit, Delete, Upload } from '@mui/icons-material';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm, Controller } from 'react-hook-form';
 import { transactionsApi, accountsApi, payeesApi, categoriesApi } from '../services/api';
-import { Transaction, CreateTransactionDto, Account, Payee, Category } from '../types';
+import { Transaction, CreateTransactionDto } from '../types';
 import { formatCurrency, formatDate } from '../utils/formatters';
 
 const transactionTypes = [

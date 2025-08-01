@@ -22,7 +22,56 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: false,
 });
+
+// Add request interceptor to include auth token
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Add response interceptor to handle auth errors
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Token is invalid, remove it and redirect to login
+      localStorage.removeItem('token');
+      window.location.href = '/';
+      return Promise.reject(new Error('Session expired. Please login again.'));
+    }
+    
+    // Handle other common errors
+    if (error.response?.status === 404) {
+      return Promise.reject(new Error('Resource not found.'));
+    }
+    
+    if (error.response?.status === 500) {
+      return Promise.reject(new Error('Server error. Please try again later.'));
+    }
+    
+    // Return specific error message if available
+    if (error.response?.data?.detail) {
+      return Promise.reject(new Error(error.response.data.detail));
+    }
+    
+    // Network error
+    if (!error.response) {
+      return Promise.reject(new Error('Network error. Please check your connection.'));
+    }
+    
+    return Promise.reject(error);
+  }
+);
 
 // Accounts API
 export const accountsApi = {
