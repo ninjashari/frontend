@@ -5,6 +5,8 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { CircularProgress, Box } from '@mui/material';
 import CssBaseline from '@mui/material/CssBaseline';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { ToastProvider } from './contexts/ToastContext';
+import ErrorBoundary from './components/ErrorBoundary';
 import Layout from './components/Layout';
 import AuthPage from './pages/AuthPage';
 import Dashboard from './pages/Dashboard';
@@ -13,6 +15,7 @@ import Transactions from './pages/Transactions';
 import Payees from './pages/Payees';
 import Categories from './pages/Categories';
 import Reports from './pages/Reports';
+import { useAppNotifications } from './hooks/useAppNotifications';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -36,6 +39,7 @@ const theme = createTheme({
 
 const AppContent: React.FC = () => {
   const { user, isLoading } = useAuth();
+  useAppNotifications();
 
   if (isLoading) {
     return (
@@ -55,31 +59,37 @@ const AppContent: React.FC = () => {
   }
 
   return (
-    <Layout>
-      <Routes>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/accounts" element={<Accounts />} />
-        <Route path="/transactions" element={<Transactions />} />
-        <Route path="/payees" element={<Payees />} />
-        <Route path="/categories" element={<Categories />} />
-        <Route path="/reports" element={<Reports />} />
-      </Routes>
-    </Layout>
+    <ErrorBoundary>
+      <Layout>
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/accounts" element={<Accounts />} />
+          <Route path="/transactions" element={<Transactions />} />
+          <Route path="/payees" element={<Payees />} />
+          <Route path="/categories" element={<Categories />} />
+          <Route path="/reports" element={<Reports />} />
+        </Routes>
+      </Layout>
+    </ErrorBoundary>
   );
 };
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <Router>
-          <AuthProvider>
-            <AppContent />
-          </AuthProvider>
-        </Router>
-      </ThemeProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider theme={theme}>
+          <CssBaseline />
+          <ToastProvider>
+            <Router>
+              <AuthProvider>
+                <AppContent />
+              </AuthProvider>
+            </Router>
+          </ToastProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 

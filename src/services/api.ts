@@ -43,19 +43,37 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Handle authentication errors
     if (error.response?.status === 401) {
-      // Token is invalid, remove it and redirect to login
       localStorage.removeItem('token');
       window.location.href = '/';
       return Promise.reject(new Error('Session expired. Please login again.'));
     }
     
-    // Handle other common errors
-    if (error.response?.status === 404) {
-      return Promise.reject(new Error('Resource not found.'));
+    // Handle common HTTP errors with user-friendly messages
+    if (error.response?.status === 403) {
+      return Promise.reject(new Error('You do not have permission to perform this action.'));
     }
     
-    if (error.response?.status === 500) {
+    if (error.response?.status === 404) {
+      return Promise.reject(new Error('The requested resource was not found.'));
+    }
+    
+    if (error.response?.status === 422) {
+      // Validation errors
+      const detail = error.response?.data?.detail;
+      if (Array.isArray(detail)) {
+        const messages = detail.map((err: any) => `${err.loc?.join(' → ') || 'Field'}: ${err.msg}`);
+        return Promise.reject(new Error(`Validation error: ${messages.join(', ')}`));
+      }
+      return Promise.reject(new Error(detail || 'Validation error. Please check your input.'));
+    }
+    
+    if (error.response?.status === 429) {
+      return Promise.reject(new Error('Too many requests. Please wait a moment and try again.'));
+    }
+    
+    if (error.response?.status >= 500) {
       return Promise.reject(new Error('Server error. Please try again later.'));
     }
     
@@ -66,10 +84,11 @@ api.interceptors.response.use(
     
     // Network error
     if (!error.response) {
-      return Promise.reject(new Error('Network error. Please check your connection.'));
+      return Promise.reject(new Error('Network error. Please check your internet connection.'));
     }
     
-    return Promise.reject(error);
+    // Generic error
+    return Promise.reject(new Error('An unexpected error occurred. Please try again.'));
   }
 );
 

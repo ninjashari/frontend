@@ -20,11 +20,12 @@ import {
   CircularProgress,
 } from '@mui/material';
 import { Add, Edit, Delete } from '@mui/icons-material';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useForm, Controller } from 'react-hook-form';
 import { categoriesApi } from '../services/api';
 import { Category, CreateCategoryDto } from '../types';
 import { formatDateTime } from '../utils/formatters';
+import { useCreateWithToast, useUpdateWithToast, useDeleteWithToast } from '../hooks/useApiWithToast';
 
 const Categories: React.FC = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -43,25 +44,28 @@ const Categories: React.FC = () => {
     queryFn: () => categoriesApi.getAll(),
   });
 
-  const createMutation = useMutation({
-    mutationFn: categoriesApi.create,
+  const createMutation = useCreateWithToast(categoriesApi.create, {
+    resourceName: 'Category',
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
       handleCloseDialog();
     },
   });
 
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<CreateCategoryDto> }) =>
+  const updateMutation = useUpdateWithToast(
+    ({ id, data }: { id: number; data: Partial<CreateCategoryDto> }) =>
       categoriesApi.update(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['categories'] });
-      handleCloseDialog();
-    },
-  });
+    {
+      resourceName: 'Category',
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['categories'] });
+        handleCloseDialog();
+      },
+    }
+  );
 
-  const deleteMutation = useMutation({
-    mutationFn: categoriesApi.delete,
+  const deleteMutation = useDeleteWithToast(categoriesApi.delete, {
+    resourceName: 'Category',
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
     },

@@ -16,19 +16,19 @@ import {
   CircularProgress,
 } from '@mui/material';
 import { Add, Edit, Delete } from '@mui/icons-material';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useForm, Controller } from 'react-hook-form';
 import { accountsApi } from '../services/api';
 import { Account, CreateAccountDto } from '../types';
 import { formatCurrency, formatAccountType } from '../utils/formatters';
+import { useCreateWithToast, useUpdateWithToast, useDeleteWithToast } from '../hooks/useApiWithToast';
 
 const accountTypes = [
   { value: 'checking', label: 'Checking' },
   { value: 'savings', label: 'Savings' },
-  { value: 'credit_card', label: 'Credit Card' },
+  { value: 'credit', label: 'Credit Card' },
   { value: 'cash', label: 'Cash' },
   { value: 'investment', label: 'Investment' },
-  { value: 'loan', label: 'Loan' },
 ];
 
 const Accounts: React.FC = () => {
@@ -39,38 +39,41 @@ const Accounts: React.FC = () => {
   const { control, handleSubmit, reset, watch, formState: { errors } } = useForm<CreateAccountDto>({
     defaultValues: {
       name: '',
-      account_type: 'checking',
+      type: 'checking',
       balance: 0,
       opening_date: new Date().toISOString().split('T')[0],
     },
   });
 
-  const watchAccountType = watch('account_type');
+  const watchAccountType = watch('type');
 
   const { data: accounts, isLoading } = useQuery({
     queryKey: ['accounts'],
     queryFn: accountsApi.getAll,
   });
 
-  const createMutation = useMutation({
-    mutationFn: accountsApi.create,
+  const createMutation = useCreateWithToast(accountsApi.create, {
+    resourceName: 'Account',
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['accounts'] });
       handleCloseDialog();
     },
   });
 
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<CreateAccountDto> }) =>
+  const updateMutation = useUpdateWithToast(
+    ({ id, data }: { id: number; data: Partial<CreateAccountDto> }) =>
       accountsApi.update(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['accounts'] });
-      handleCloseDialog();
-    },
-  });
+    {
+      resourceName: 'Account',
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['accounts'] });
+        handleCloseDialog();
+      },
+    }
+  );
 
-  const deleteMutation = useMutation({
-    mutationFn: accountsApi.delete,
+  const deleteMutation = useDeleteWithToast(accountsApi.delete, {
+    resourceName: 'Account',
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['accounts'] });
     },
@@ -81,18 +84,18 @@ const Accounts: React.FC = () => {
       setEditingAccount(account);
       reset({
         name: account.name,
-        account_type: account.account_type,
+        type: account.type,
         balance: account.balance,
         opening_date: account.opening_date,
         credit_limit: account.credit_limit,
         bill_generation_date: account.bill_generation_date,
-        last_payment_date: account.last_payment_date,
+        payment_due_date: account.payment_due_date,
       });
     } else {
       setEditingAccount(null);
       reset({
         name: '',
-        account_type: 'checking',
+        type: 'checking',
         balance: 0,
         opening_date: new Date().toISOString().split('T')[0],
       });
@@ -107,16 +110,26 @@ const Accounts: React.FC = () => {
   };
 
   const onSubmit = (data: CreateAccountDto) => {
+    // Ensure numeric fields are properly converted
+    const submitData = {
+      ...data,
+      balance: Number(data.balance) || 0,
+      credit_limit: data.credit_limit ? Number(data.credit_limit) : undefined,
+      bill_generation_date: data.bill_generation_date ? Number(data.bill_generation_date) : undefined,
+      payment_due_date: data.payment_due_date ? Number(data.payment_due_date) : undefined,
+    };
+
+
     if (editingAccount) {
-      updateMutation.mutate({ id: editingAccount.id, data });
+      updateMutation.mutate({ id: editingAccount.id, data: submitData });
     } else {
-      createMutation.mutate(data);
+      createMutation.mutate(submitData);
     }
   };
 
-  const handleDelete = (id: number) => {
-    if (window.confirm('Are you sure you want to delete this account?')) {
-      deleteMutation.mutate(id);
+  const handleDelete = (account: Account) => {
+    if (window.confirm(`Are you sure you want to delete the account "${account.name}"? This action cannot be undone.`)) {
+      deleteMutation.mutate(account.id);
     }
   };
 
@@ -152,7 +165,7 @@ const Accounts: React.FC = () => {
                       {account.name}
                     </Typography>
                     <Typography variant="body2" color="textSecondary" gutterBottom>
-                      {formatAccountType(account.account_type)}
+                      {formatAccountType(account.type)}
                     </Typography>
                     <Typography
                       variant="h5"
@@ -164,7 +177,7 @@ const Accounts: React.FC = () => {
                     <Typography variant="caption" color="textSecondary">
                       Opened: {new Date(account.opening_date).toLocaleDateString()}
                     </Typography>
-                    {account.account_type === 'credit_card' && (
+                    {account.type === 'credit' && (
                       <Box mt={1}>
                         {account.credit_limit && (
                           <Typography variant="caption" display="block">
@@ -176,9 +189,9 @@ const Accounts: React.FC = () => {
                             Bill Date: {account.bill_generation_date}th of month
                           </Typography>
                         )}
-                        {account.last_payment_date && (
+                        {account.payment_due_date && (
                           <Typography variant="caption" display="block">
-                            Last Payment: {account.last_payment_date}th of month
+                            Payment Due: {account.payment_due_date}th of month
                           </Typography>
                         )}
                       </Box>
@@ -193,7 +206,7 @@ const Accounts: React.FC = () => {
                     </IconButton>
                     <IconButton
                       size="small"
-                      onClick={() => handleDelete(account.id)}
+                      onClick={() => handleDelete(account)}
                       color="error"
                     >
                       <Delete />
@@ -230,7 +243,7 @@ const Accounts: React.FC = () => {
             />
 
             <Controller
-              name="account_type"
+              name="type"
               control={control}
               rules={{ required: 'Account type is required' }}
               render={({ field }) => (
@@ -240,8 +253,8 @@ const Accounts: React.FC = () => {
                   label="Account Type"
                   fullWidth
                   margin="normal"
-                  error={!!errors.account_type}
-                  helperText={errors.account_type?.message}
+                  error={!!errors.type}
+                  helperText={errors.type?.message}
                 >
                   {accountTypes.map((option) => (
                     <MenuItem key={option.value} value={option.value}>
@@ -287,7 +300,7 @@ const Accounts: React.FC = () => {
               )}
             />
 
-            {watchAccountType === 'credit_card' && (
+            {watchAccountType === 'credit' && (
               <>
                 <Controller
                   name="credit_limit"
@@ -319,12 +332,12 @@ const Accounts: React.FC = () => {
                 />
 
                 <Controller
-                  name="last_payment_date"
+                  name="payment_due_date"
                   control={control}
                   render={({ field }) => (
                     <TextField
                       {...field}
-                      label="Last Payment Date (Day of Month)"
+                      label="Payment Due Date (Day of Month)"
                       type="number"
                       fullWidth
                       margin="normal"

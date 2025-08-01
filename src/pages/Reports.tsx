@@ -21,6 +21,8 @@ import { MultiValue } from 'react-select';
 import { reportsApi, accountsApi, categoriesApi, payeesApi } from '../services/api';
 import MultiSelectDropdown, { Option } from '../components/MultiSelectDropdown';
 import { formatCurrency } from '../utils/formatters';
+import { useUserInteractionNotifications } from '../hooks/useUserInteractionNotifications';
+import { useToast } from '../contexts/ToastContext';
 
 const Reports: React.FC = () => {
   const [startDate, setStartDate] = useState('');
@@ -28,6 +30,9 @@ const Reports: React.FC = () => {
   const [selectedAccounts, setSelectedAccounts] = useState<MultiValue<Option>>([]);
   const [selectedCategories, setSelectedCategories] = useState<MultiValue<Option>>([]);
   const [selectedPayees, setSelectedPayees] = useState<MultiValue<Option>>([]);
+  
+  const toast = useToast();
+  const userNotifications = useUserInteractionNotifications();
 
   // Get filter data
   const { data: accounts } = useQuery({
@@ -102,12 +107,29 @@ const Reports: React.FC = () => {
     label: payee.name,
   })) || [];
 
-  const handleGenerateReports = () => {
-    refetchSummary();
-    refetchCategory();
-    refetchPayee();
-    refetchAccount();
-    refetchTrend();
+  const handleGenerateReports = async () => {
+    toast.showInfo('Generating reports...');
+    
+    try {
+      const results = await Promise.allSettled([
+        refetchSummary(),
+        refetchCategory(),
+        refetchPayee(),
+        refetchAccount(),
+        refetchTrend(),
+      ]);
+      
+      const successCount = results.filter(result => result.status === 'fulfilled').length;
+      const errorCount = results.filter(result => result.status === 'rejected').length;
+      
+      if (errorCount === 0) {
+        toast.showSuccess(`All ${successCount} reports generated successfully!`);
+      } else {
+        toast.showWarning(`Reports generated: ${successCount} successful, ${errorCount} failed`);
+      }
+    } catch (error) {
+      toast.showError('Failed to generate reports. Please try again.');
+    }
   };
 
   const handleResetFilters = () => {
@@ -116,6 +138,7 @@ const Reports: React.FC = () => {
     setSelectedAccounts([]);
     setSelectedCategories([]);
     setSelectedPayees([]);
+    userNotifications.showFiltersCleared();
   };
 
   return (

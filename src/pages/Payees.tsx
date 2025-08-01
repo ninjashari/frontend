@@ -19,11 +19,12 @@ import {
   CircularProgress,
 } from '@mui/material';
 import { Add, Edit, Delete } from '@mui/icons-material';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useForm, Controller } from 'react-hook-form';
 import { payeesApi } from '../services/api';
 import { Payee, CreatePayeeDto } from '../types';
 import { formatDateTime } from '../utils/formatters';
+import { useCreateWithToast, useUpdateWithToast, useDeleteWithToast } from '../hooks/useApiWithToast';
 
 const Payees: React.FC = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -41,25 +42,28 @@ const Payees: React.FC = () => {
     queryFn: () => payeesApi.getAll(),
   });
 
-  const createMutation = useMutation({
-    mutationFn: payeesApi.create,
+  const createMutation = useCreateWithToast(payeesApi.create, {
+    resourceName: 'Payee',
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['payees'] });
       handleCloseDialog();
     },
   });
 
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<CreatePayeeDto> }) =>
+  const updateMutation = useUpdateWithToast(
+    ({ id, data }: { id: number; data: Partial<CreatePayeeDto> }) =>
       payeesApi.update(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['payees'] });
-      handleCloseDialog();
-    },
-  });
+    {
+      resourceName: 'Payee',
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['payees'] });
+        handleCloseDialog();
+      },
+    }
+  );
 
-  const deleteMutation = useMutation({
-    mutationFn: payeesApi.delete,
+  const deleteMutation = useDeleteWithToast(payeesApi.delete, {
+    resourceName: 'Payee',
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['payees'] });
     },

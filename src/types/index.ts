@@ -1,12 +1,12 @@
 export interface Account {
   id: number;
   name: string;
-  account_type: 'checking' | 'savings' | 'credit_card' | 'cash' | 'investment' | 'loan';
+  type: 'checking' | 'savings' | 'credit' | 'cash' | 'investment';
   balance: number;
   opening_date: string;
   credit_limit?: number;
   bill_generation_date?: number;
-  last_payment_date?: number;
+  payment_due_date?: number;
   created_at: string;
   updated_at?: string;
 }
@@ -46,12 +46,12 @@ export interface Transaction {
 
 export interface CreateAccountDto {
   name: string;
-  account_type: Account['account_type'];
+  type: Account['type'];
   balance?: number;
   opening_date: string;
   credit_limit?: number;
   bill_generation_date?: number;
-  last_payment_date?: number;
+  payment_due_date?: number;
 }
 
 export interface CreatePayeeDto {

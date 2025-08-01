@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Box,
   Card,
@@ -6,7 +6,6 @@ import {
   TextField,
   Button,
   Typography,
-  Alert,
   CircularProgress,
 } from '@mui/material';
 import { useForm, Controller } from 'react-hook-form';
@@ -18,7 +17,6 @@ interface LoginFormProps {
 }
 
 const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
-  const [error, setError] = useState<string>('');
   const { login, isLoading } = useAuth();
   
   const { control, handleSubmit, formState: { errors } } = useForm<LoginCredentials>({
@@ -30,10 +28,9 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
 
   const onSubmit = async (data: LoginCredentials) => {
     try {
-      setError('');
       await login(data);
     } catch (err: any) {
-      setError(err.message || 'Login failed. Please try again.');
+      // Error handling is now done in AuthContext with toast notifications
     }
   };
 
@@ -55,11 +52,6 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
             Sign in to your expense manager
           </Typography>
 
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
-            </Alert>
-          )}
 
           <form onSubmit={handleSubmit(onSubmit)}>
             <Controller

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, LoginCredentials, RegisterData, AuthContextType } from '../types/auth';
 import { authService } from '../services/authApi';
+import { useToast } from './ToastContext';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -20,6 +21,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const toast = useToast();
 
   useEffect(() => {
     // Check for existing token in localStorage
@@ -53,7 +55,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setToken(authToken.access_token);
       setUser(userData);
       localStorage.setItem('token', authToken.access_token);
+      
+      toast.showSuccess(`Welcome back, ${userData.name}!`);
     } catch (error) {
+      toast.showError((error as Error).message || 'Login failed');
       throw error;
     } finally {
       setIsLoading(false);
@@ -64,21 +69,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsLoading(true);
     try {
       await authService.register(data);
+      toast.showSuccess(`Account created successfully! Welcome, ${data.name}!`);
       // Auto-login after registration
       await login({ email: data.email, password: data.password });
     } catch (error) {
       setIsLoading(false);
+      toast.showError((error as Error).message || 'Registration failed');
       throw error;
     }
   };
 
   const logout = () => {
+    const userName = user?.name;
     setUser(null);
     setToken(null);
     localStorage.removeItem('token');
     authService.logout().catch(() => {
       // Ignore logout errors
     });
+    toast.showInfo(`Goodbye${userName ? `, ${userName}` : ''}! You have been logged out.`);
   };
 
   const value: AuthContextType = {

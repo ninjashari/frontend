@@ -120,7 +120,7 @@ const Dashboard: React.FC = () => {
                     </Typography>
                   </Box>
                   <Typography variant="caption" color="textSecondary">
-                    {account.account_type.replace('_', ' ').toUpperCase()}
+                    {account.type.replace('_', ' ').toUpperCase()}
                   </Typography>
                 </Box>
               ))}

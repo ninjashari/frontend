@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Box,
   Card,
@@ -6,7 +6,6 @@ import {
   TextField,
   Button,
   Typography,
-  Alert,
   CircularProgress,
 } from '@mui/material';
 import { useForm, Controller } from 'react-hook-form';
@@ -18,7 +17,6 @@ interface RegisterFormProps {
 }
 
 const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
-  const [error, setError] = useState<string>('');
   const { register, isLoading } = useAuth();
   
   const { control, handleSubmit, formState: { errors }, watch } = useForm<RegisterData & { confirmPassword: string }>({
@@ -34,11 +32,10 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
 
   const onSubmit = async (data: RegisterData & { confirmPassword: string }) => {
     try {
-      setError('');
       const { confirmPassword, ...registerData } = data;
       await register(registerData);
     } catch (err: any) {
-      setError(err.message || 'Registration failed. Please try again.');
+      // Error handling is now done in AuthContext with toast notifications
     }
   };
 
@@ -60,11 +57,6 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
             Join your personal expense manager
           </Typography>
 
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
-            </Alert>
-          )}
 
           <form onSubmit={handleSubmit(onSubmit)}>
             <Controller

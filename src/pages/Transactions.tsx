@@ -21,11 +21,12 @@ import {
   CircularProgress,
 } from '@mui/material';
 import { Add, Edit, Delete, Upload } from '@mui/icons-material';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useForm, Controller } from 'react-hook-form';
 import { transactionsApi, accountsApi, payeesApi, categoriesApi } from '../services/api';
 import { Transaction, CreateTransactionDto } from '../types';
 import { formatCurrency, formatDate } from '../utils/formatters';
+import { useCreateWithToast, useUpdateWithToast, useDeleteWithToast } from '../hooks/useApiWithToast';
 
 const transactionTypes = [
   { value: 'deposit', label: 'Deposit' },
@@ -70,8 +71,8 @@ const Transactions: React.FC = () => {
     queryFn: () => categoriesApi.getAll(),
   });
 
-  const createMutation = useMutation({
-    mutationFn: transactionsApi.create,
+  const createMutation = useCreateWithToast(transactionsApi.create, {
+    resourceName: 'Transaction',
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       queryClient.invalidateQueries({ queryKey: ['accounts'] });
@@ -79,18 +80,21 @@ const Transactions: React.FC = () => {
     },
   });
 
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<CreateTransactionDto> }) =>
+  const updateMutation = useUpdateWithToast(
+    ({ id, data }: { id: number; data: Partial<CreateTransactionDto> }) =>
       transactionsApi.update(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
-      queryClient.invalidateQueries({ queryKey: ['accounts'] });
-      handleCloseDialog();
-    },
-  });
+    {
+      resourceName: 'Transaction',
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['transactions'] });
+        queryClient.invalidateQueries({ queryKey: ['accounts'] });
+        handleCloseDialog();
+      },
+    }
+  );
 
-  const deleteMutation = useMutation({
-    mutationFn: transactionsApi.delete,
+  const deleteMutation = useDeleteWithToast(transactionsApi.delete, {
+    resourceName: 'Transaction',
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       queryClient.invalidateQueries({ queryKey: ['accounts'] });
