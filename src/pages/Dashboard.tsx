@@ -27,7 +27,17 @@ const Dashboard: React.FC = () => {
     queryFn: () => transactionsApi.getAll({ limit: 5 }),
   });
 
-  const totalBalance = accounts?.reduce((sum, account) => sum + Number(account.balance || 0), 0) || 0;
+  // Calculate total net worth (assets - debts)
+  const totalBalance = accounts?.reduce((sum, account) => {
+    const balance = Number(account.balance || 0);
+    if (account.type === 'credit') {
+      // For credit cards, subtract debt from total (positive balance = debt)
+      return sum - Math.max(0, balance);
+    } else {
+      // For regular accounts, add balance to total
+      return sum + balance;
+    }
+  }, 0) || 0;
 
   if (accountsLoading || summaryLoading || transactionsLoading) {
     return (
@@ -114,9 +124,15 @@ const Dashboard: React.FC = () => {
                     <Typography variant="body1">{account.name}</Typography>
                     <Typography
                       variant="body2"
-                      color={account.balance >= 0 ? 'success.main' : 'error.main'}
+                      color={
+                        account.type === 'credit'
+                          ? (account.balance > 0 ? 'error.main' : 'success.main')
+                          : (account.balance >= 0 ? 'success.main' : 'error.main')
+                      }
                     >
-                      {formatCurrency(account.balance)}
+                      {account.type === 'credit' && account.balance > 0 
+                        ? `${formatCurrency(account.balance)} debt` 
+                        : formatCurrency(account.balance)}
                     </Typography>
                   </Box>
                   <Typography variant="caption" color="textSecondary">

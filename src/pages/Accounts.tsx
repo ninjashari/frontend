@@ -40,7 +40,22 @@ const Accounts: React.FC = () => {
   // Helper function to calculate credit utilization percentage
   const getCreditUtilization = (balance: number, creditLimit: number) => {
     if (!creditLimit || creditLimit === 0) return 0;
-    return Math.min((balance / creditLimit) * 100, 100);
+    // For credit cards, positive balance = debt, negative balance = credit balance
+    const utilization = Math.max(0, (balance / creditLimit) * 100);
+    return Math.min(utilization, 100);
+  };
+
+  // Helper function to get available credit
+  const getAvailableCredit = (balance: number, creditLimit: number) => {
+    // For credit cards: available = limit - debt (positive balance)
+    // If balance is negative (credit balance), add it to available credit
+    return creditLimit - Math.max(0, balance);
+  };
+
+  // Helper function to determine balance color for credit cards
+  const getCreditBalanceColor = (balance: number) => {
+    // For credit cards: positive balance = debt (bad), negative balance = credit (good)
+    return balance > 0 ? 'error.main' : 'success.main';
   };
 
   const { control, handleSubmit, reset, watch, formState: { errors } } = useForm<CreateAccountDto>({
@@ -56,7 +71,16 @@ const Accounts: React.FC = () => {
 
   const { data: accounts, isLoading } = useQuery({
     queryKey: ['accounts'],
-    queryFn: accountsApi.getAll,
+    queryFn: async () => {
+      // Recalculate balances first, then fetch accounts
+      try {
+        await accountsApi.recalculateBalances();
+      } catch (error) {
+        console.warn('Failed to recalculate balances:', error);
+        // Continue with fetching accounts even if recalculation fails
+      }
+      return accountsApi.getAll();
+    },
   });
 
   const createMutation = useCreateWithToast(accountsApi.create, {
@@ -176,10 +200,10 @@ const Accounts: React.FC = () => {
                     </Typography>
                     <Typography
                       variant="h5"
-                      color={account.balance >= 0 ? 'success.main' : 'error.main'}
+                      color={account.type === 'credit' ? getCreditBalanceColor(Number(account.balance || 0)) : (account.balance >= 0 ? 'success.main' : 'error.main')}
                       gutterBottom
                     >
-                      {formatCurrency(account.balance)}
+                      {account.type === 'credit' && account.balance > 0 ? `${formatCurrency(account.balance)} debt` : formatCurrency(account.balance)}
                     </Typography>
                     <Typography variant="caption" color="textSecondary">
                       Opened: {new Date(account.opening_date).toLocaleDateString()}
@@ -192,7 +216,7 @@ const Accounts: React.FC = () => {
                               Credit Limit: {formatCurrency(account.credit_limit)}
                             </Typography>
                             <Typography variant="caption" display="block" color="textSecondary">
-                              Available: {formatCurrency(account.credit_limit - Number(account.balance || 0))}
+                              Available: {formatCurrency(getAvailableCredit(Number(account.balance || 0), account.credit_limit))}
                             </Typography>
                             <Box mt={1}>
                               <Box display="flex" alignItems="center" justifyContent="space-between" mb={0.5}>

@@ -103,6 +103,7 @@ export const accountsApi = {
   update: (id: number, data: Partial<CreateAccountDto>): Promise<Account> => 
     api.put(`/accounts/${id}`, data).then(res => res.data),
   delete: (id: number): Promise<void> => api.delete(`/accounts/${id}`).then(res => res.data),
+  recalculateBalances: (): Promise<any> => api.post('/accounts/recalculate-balances').then(res => res.data),
 };
 
 // Payees API
