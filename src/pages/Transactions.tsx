@@ -29,8 +29,8 @@ import { formatCurrency, formatDate } from '../utils/formatters';
 import { useCreateWithToast, useUpdateWithToast, useDeleteWithToast } from '../hooks/useApiWithToast';
 
 const transactionTypes = [
-  { value: 'deposit', label: 'Deposit' },
-  { value: 'withdrawal', label: 'Withdrawal' },
+  { value: 'income', label: 'Income' },
+  { value: 'expense', label: 'Expense' },
   { value: 'transfer', label: 'Transfer' },
 ];
 
@@ -44,12 +44,12 @@ const Transactions: React.FC = () => {
       date: new Date().toISOString().split('T')[0],
       amount: 0,
       description: '',
-      transaction_type: 'withdrawal',
+      type: 'expense',
       account_id: 0,
     },
   });
 
-  const watchTransactionType = watch('transaction_type');
+  const watchTransactionType = watch('type');
 
   const { data: transactions, isLoading: transactionsLoading } = useQuery({
     queryKey: ['transactions'],
@@ -108,7 +108,7 @@ const Transactions: React.FC = () => {
         date: transaction.date,
         amount: transaction.amount,
         description: transaction.description,
-        transaction_type: transaction.transaction_type,
+        type: transaction.type,
         account_id: transaction.account_id,
         to_account_id: transaction.to_account_id,
         payee_id: transaction.payee_id,
@@ -120,7 +120,7 @@ const Transactions: React.FC = () => {
         date: new Date().toISOString().split('T')[0],
         amount: 0,
         description: '',
-        transaction_type: 'withdrawal',
+        type: 'expense',
         account_id: 0,
       });
     }
@@ -156,9 +156,9 @@ const Transactions: React.FC = () => {
 
   const getTransactionTypeColor = (type: string) => {
     switch (type) {
-      case 'deposit':
+      case 'income':
         return 'success';
-      case 'withdrawal':
+      case 'expense':
         return 'error';
       case 'transfer':
         return 'info';
@@ -234,20 +234,20 @@ const Transactions: React.FC = () => {
                 </TableCell>
                 <TableCell>
                   <Chip
-                    label={transaction.transaction_type}
+                    label={transaction.type}
                     size="small"
-                    color={getTransactionTypeColor(transaction.transaction_type) as any}
+                    color={getTransactionTypeColor(transaction.type) as any}
                   />
                 </TableCell>
                 <TableCell align="right">
                   <Typography
                     color={
-                      transaction.transaction_type === 'deposit'
+                      transaction.type === 'income'
                         ? 'success.main'
                         : 'error.main'
                     }
                   >
-                    {transaction.transaction_type === 'deposit' ? '+' : '-'}
+                    {transaction.type === 'income' ? '+' : '-'}
                     {formatCurrency(transaction.amount)}
                   </Typography>
                 </TableCell>
@@ -330,7 +330,7 @@ const Transactions: React.FC = () => {
             />
 
             <Controller
-              name="transaction_type"
+              name="type"
               control={control}
               rules={{ required: 'Transaction type is required' }}
               render={({ field }) => (
@@ -340,8 +340,8 @@ const Transactions: React.FC = () => {
                   label="Transaction Type"
                   fullWidth
                   margin="normal"
-                  error={!!errors.transaction_type}
-                  helperText={errors.transaction_type?.message}
+                  error={!!errors.type}
+                  helperText={errors.type?.message}
                 >
                   {transactionTypes.map((option) => (
                     <MenuItem key={option.value} value={option.value}>

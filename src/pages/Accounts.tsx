@@ -14,6 +14,7 @@ import {
   MenuItem,
   IconButton,
   CircularProgress,
+  LinearProgress,
 } from '@mui/material';
 import { Add, Edit, Delete } from '@mui/icons-material';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -35,6 +36,12 @@ const Accounts: React.FC = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);
   const queryClient = useQueryClient();
+
+  // Helper function to calculate credit utilization percentage
+  const getCreditUtilization = (balance: number, creditLimit: number) => {
+    if (!creditLimit || creditLimit === 0) return 0;
+    return Math.min((balance / creditLimit) * 100, 100);
+  };
 
   const { control, handleSubmit, reset, watch, formState: { errors } } = useForm<CreateAccountDto>({
     defaultValues: {
@@ -180,12 +187,39 @@ const Accounts: React.FC = () => {
                     {account.type === 'credit' && (
                       <Box mt={1}>
                         {account.credit_limit && (
-                          <Typography variant="caption" display="block">
-                            Credit Limit: {formatCurrency(account.credit_limit)}
-                          </Typography>
+                          <>
+                            <Typography variant="caption" display="block">
+                              Credit Limit: {formatCurrency(account.credit_limit)}
+                            </Typography>
+                            <Typography variant="caption" display="block" color="textSecondary">
+                              Available: {formatCurrency(account.credit_limit - Number(account.balance || 0))}
+                            </Typography>
+                            <Box mt={1}>
+                              <Box display="flex" alignItems="center" justifyContent="space-between" mb={0.5}>
+                                <Typography variant="caption" color="textSecondary">
+                                  Credit Utilization
+                                </Typography>
+                                <Typography variant="caption" color="textSecondary">
+                                  {getCreditUtilization(Number(account.balance || 0), account.credit_limit).toFixed(1)}%
+                                </Typography>
+                              </Box>
+                              <LinearProgress
+                                variant="determinate"
+                                value={getCreditUtilization(Number(account.balance || 0), account.credit_limit)}
+                                color={
+                                  getCreditUtilization(Number(account.balance || 0), account.credit_limit) > 90
+                                    ? 'error'
+                                    : getCreditUtilization(Number(account.balance || 0), account.credit_limit) > 70
+                                    ? 'warning'
+                                    : 'primary'
+                                }
+                                sx={{ height: 6, borderRadius: 3 }}
+                              />
+                            </Box>
+                          </>
                         )}
                         {account.bill_generation_date && (
-                          <Typography variant="caption" display="block">
+                          <Typography variant="caption" display="block" mt={1}>
                             Bill Date: {account.bill_generation_date}th of month
                           </Typography>
                         )}

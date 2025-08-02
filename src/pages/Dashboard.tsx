@@ -27,7 +27,7 @@ const Dashboard: React.FC = () => {
     queryFn: () => transactionsApi.getAll({ limit: 5 }),
   });
 
-  const totalBalance = accounts?.reduce((sum, account) => sum + account.balance, 0) || 0;
+  const totalBalance = accounts?.reduce((sum, account) => sum + Number(account.balance || 0), 0) || 0;
 
   if (accountsLoading || summaryLoading || transactionsLoading) {
     return (
@@ -149,12 +149,12 @@ const Dashboard: React.FC = () => {
                     <Typography
                       variant="body2"
                       color={
-                        transaction.transaction_type === 'deposit'
+                        transaction.type === 'income'
                           ? 'success.main'
                           : 'error.main'
                       }
                     >
-                      {transaction.transaction_type === 'deposit' ? '+' : '-'}
+                      {transaction.type === 'income' ? '+' : '-'}
                       {formatCurrency(transaction.amount)}
                     </Typography>
                   </Box>

@@ -21,6 +21,7 @@ import {
   Person,
   Category,
   Assessment,
+  Upload,
   AccountCircle,
   Logout,
 } from '@mui/icons-material';
@@ -37,6 +38,7 @@ const menuItems = [
   { text: 'Dashboard', icon: <Dashboard />, path: '/' },
   { text: 'Accounts', icon: <AccountBalance />, path: '/accounts' },
   { text: 'Transactions', icon: <Receipt />, path: '/transactions' },
+  { text: 'Import', icon: <Upload />, path: '/import' },
   { text: 'Payees', icon: <Person />, path: '/payees' },
   { text: 'Categories', icon: <Category />, path: '/categories' },
   { text: 'Reports', icon: <Assessment />, path: '/reports' },

@@ -15,6 +15,7 @@ import Transactions from './pages/Transactions';
 import Payees from './pages/Payees';
 import Categories from './pages/Categories';
 import Reports from './pages/Reports';
+import Import from './pages/Import';
 import { useAppNotifications } from './hooks/useAppNotifications';
 
 const queryClient = new QueryClient({
@@ -68,6 +69,7 @@ const AppContent: React.FC = () => {
           <Route path="/payees" element={<Payees />} />
           <Route path="/categories" element={<Categories />} />
           <Route path="/reports" element={<Reports />} />
+          <Route path="/import" element={<Import />} />
         </Routes>
       </Layout>
     </ErrorBoundary>

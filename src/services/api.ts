@@ -22,7 +22,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: false,
+  withCredentials: true,
 });
 
 // Add request interceptor to include auth token
@@ -82,8 +82,11 @@ api.interceptors.response.use(
       return Promise.reject(new Error(error.response.data.detail));
     }
     
-    // Network error
+    // Network error or CORS error
     if (!error.response) {
+      if (error.code === 'ERR_NETWORK') {
+        return Promise.reject(new Error('Network error or CORS issue. Please check your internet connection and ensure the API server is running.'));
+      }
       return Promise.reject(new Error('Network error. Please check your internet connection.'));
     }
     

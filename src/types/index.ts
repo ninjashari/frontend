@@ -31,7 +31,7 @@ export interface Transaction {
   date: string;
   amount: number;
   description?: string;
-  transaction_type: 'deposit' | 'withdrawal' | 'transfer';
+  type: 'income' | 'expense' | 'transfer';
   account_id: number;
   to_account_id?: number;
   payee_id?: number;
@@ -67,7 +67,7 @@ export interface CreateTransactionDto {
   date: string;
   amount: number;
   description?: string;
-  transaction_type: Transaction['transaction_type'];
+  type: Transaction['type'];
   account_id: number;
   to_account_id?: number;
   payee_id?: number;
