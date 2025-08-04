@@ -107,3 +107,43 @@ export interface MonthlyTrend {
   transaction_type: string;
   total_amount: number;
 }
+
+// PDF LLM Import Types
+export interface LLMTransactionData {
+  date: string;
+  amount: number;
+  description: string;
+  transaction_type: string;
+  payee?: string;
+  category?: string;
+  confidence: number;
+}
+
+export interface PDFLLMSystemStatus {
+  pdf_processor: string;
+  ollama_service: string;
+  available_models: string[];
+  recommended_models: string[];
+}
+
+export interface PDFLLMPreviewResponse {
+  extraction_method: string;
+  text_length: number;
+  has_financial_data: boolean;
+  estimated_processing_time: number;
+  preview_text: string;
+  error?: string;
+}
+
+export interface PDFLLMImportResponse {
+  status: string;
+  extraction_method: string;
+  extracted_text: string;
+  transactions: LLMTransactionData[];
+  processing_notes: string[];
+  transaction_count?: number;
+  transactions_created?: number;
+  import_errors?: string[];
+  message?: string;
+  error?: string;
+}

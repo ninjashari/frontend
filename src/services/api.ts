@@ -202,6 +202,20 @@ export const importApi = {
       headers: { 'Content-Type': 'multipart/form-data' }
     }).then(res => res.data),
   
+  // PDF LLM Import APIs
+  getPdfLlmStatus: (): Promise<any> => 
+    api.get('/import/pdf-llm/status').then(res => res.data),
+  
+  previewPdfLlm: (formData: FormData): Promise<any> => 
+    api.post('/import/pdf-llm/preview', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    }).then(res => res.data),
+  
+  importPdfLlm: (formData: FormData): Promise<any> => 
+    api.post('/import/pdf-llm', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    }).then(res => res.data),
+  
   getColumnMapping: (formData: FormData, fileType: string): Promise<any> => 
     api.post(`/import/column-mapping/${fileType}`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
